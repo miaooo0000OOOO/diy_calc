@@ -1,0 +1,6 @@
+hardware/example_from_vendor/stm32rct6-utf8/Demo_MSP3525_MSP3526_STM32F103RCT6_Hardware_SPI/OBJ/*
+hardware/example_from_vendor/stm32rct6-utf8/Demo_MSP3525_MSP3526_STM32F103RCT6_Software_SPI/OBJ/*
+hardware/hardware_spi_screen/build/*
+hardware/software_spi_screen/build/*
+software/math_core/bin/*
+software/math_core/obj/*
