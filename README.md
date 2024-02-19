@@ -28,6 +28,10 @@ sqrt(2)的结果为浮点数，sqrt(4)的结果为整数
 
 计算器的各功能详见software/math_core/test部分
 
+## 实物照片
+
+![实物演示](img/calc.jpg)
+
 ## 项目结构
 ```
 .
@@ -37,8 +41,10 @@ sqrt(2)的结果为浮点数，sqrt(4)的结果为整数
 │   │   └── stm32rct6-utf8  STM32RCT6触摸屏例程 UTF8编码 MDK工程 底层库
 │   │       ├── Demo_MSP3525_MSP3526_STM32F103RCT6_Hardware_SPI 硬件SPI 
 │   │       └── Demo_MSP3525_MSP3526_STM32F103RCT6_Software_SPI 软件SPI
+│   ├── PCB 插件版的原理图和PCB
 │   ├── hardware_spi_screen 触摸屏硬件SPI UTF8编码 Makefile工程 支持STM32CubeMX 兼容高级抽象层
 │   └── software_spi_screen 触摸屏软件SPI UTF8编码 Makefile工程 支持STM32CubeMX 兼容高级抽象层
+├── img         图片
 ├── README.md   自述文件
 └── software    软件
     └── math_core   计算器的数学核心
