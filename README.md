@@ -16,8 +16,11 @@
 说明：
 
 运算多态例如
+
 sqrt(2)的结果为浮点数，sqrt(4)的结果为整数
+
 1/3的结果为浮点数，6/3的结果为整数
+
 函数目前不支持运算多态，均返回浮点数
 
 二分法解方程的精度为32位浮点数的极限精度，即7位有效数字，第七位不一定有效，函数(方程左侧减去方程右侧)必须在二分法的寻根区间内连续，如果函数不穿过x轴但有零点，二分法大概率解不出(例如方程x^2=0)
@@ -54,13 +57,17 @@ sqrt(2)的结果为浮点数，sqrt(4)的结果为整数
 复现的环境要求：
 
 操作系统：Linux Ubuntu 22.04.3 LTS
+
 安装gdb-multiarch、openocd、build-essential
+
 vscode安装cortex-debug拓展
+
 根据你使用的调试器修改hardware/hardware_spi_screen/.vscode/launch.json的configFiles，如果使用dap-link则不更改
 
 复现的硬件要求：
 
 STM32RCT6系统板
+
 3.5英寸SPI触摸屏(MSP3526)
 
 接线参照[触摸屏用户手册中文版](hardware/document/3.5inch_SPI_MSP3525_MSP3526_STM32_Demo_Instructions_CN.pdf)

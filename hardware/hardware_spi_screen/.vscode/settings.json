@@ -1,0 +1,24 @@
+{
+    "cortex-debug.variableUseNaturalFormat": true,
+    "cortex-debug.gdbPath": "/usr/bin/gdb-multiarch",
+    "cortex-debug.openocdPath": "/usr/bin/openocd",
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "*.desktop": "plaintext",
+        "main.h": "c",
+        "delay.h": "c",
+        "stdlib.h": "c",
+        "lcd.h": "c",
+        "sys.h": "c",
+        "spi.h": "c",
+        "stm32f1xx_ll_spi.h": "c",
+        "ft6336.h": "c",
+        "touch.h": "c",
+        "gui.h": "c",
+        "test.h": "c",
+        "retarget.h": "c",
+        "gpio.h": "c",
+        "usart.h": "c",
+        "calc_gui.h": "c"
+    }
+}
