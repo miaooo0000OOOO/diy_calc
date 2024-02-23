@@ -29,7 +29,7 @@ BUTTON4048 btn_char_d;
 BUTTON4048 btn_char_e;
 BUTTON4048 btn_char_f;
 
-BUTTON4048 btn_back;
+BUTTON4048 btn_del;
 BUTTON4048 btn_ac;
 
 BUTTON4048 btn_123;
@@ -48,21 +48,19 @@ BUTTON4048 btn_log;
 BUTTON4048 btn_ln;
 BUTTON4048 btn_tan;
 
-BUTTON4048 *char_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
-                              &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x, &btn_dot,
-                              &btn_char_a, &btn_char_b, &btn_char_c, &btn_char_d, &btn_char_e, &btn_char_f};
-u16 char_buttons_len;
+BUTTON4048 *input_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
+                               &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x, &btn_dot,
+                               &btn_char_a, &btn_char_b, &btn_char_c, &btn_char_d, &btn_char_e, &btn_char_f,
+                               &btn_sqrt, &btn_sin, &btn_cos, &btn_log, &btn_ln, &btn_tan};
+u16 input_buttons_len;
 
-BUTTON4048 *cmd_buttons[] = {&btn_back, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc, &btn_solve, &btn_left, &btn_right};
+BUTTON4048 *cmd_buttons[] = {&btn_del, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc, &btn_solve, &btn_left, &btn_right};
 u16 cmd_buttons_len;
-
-BUTTON4048 *fc_buttons[] = {&btn_sqrt, &btn_sin, &btn_cos, &btn_log, &btn_ln, &btn_tan};
-u16 fc_buttons_len;
 
 BUTTON4048 *all_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
                              &btn_char_a, &btn_char_b, &btn_char_c, &btn_char_d, &btn_char_e, &btn_char_f,
                              &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x, &btn_dot,
-                             &btn_back, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc, &btn_solve, &btn_left, &btn_right,
+                             &btn_del, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc, &btn_solve, &btn_left, &btn_right,
                              &btn_sqrt, &btn_sin, &btn_cos, &btn_log, &btn_ln, &btn_tan};
 u16 all_buttons_len;
 
@@ -98,7 +96,7 @@ void init_gui()
     btn_x = new_button(BUTTON_POS(2, 7), BLUE, GRAY, WHITE, "x", "x", true);
     btn_dot = new_button(BUTTON_POS(1, 7), BLUE, GRAY, WHITE, ".", ".", true);
 
-    btn_back = new_button(BUTTON_POS(6, 4), BLUE, GRAY, WHITE, "DEL", NULL, true);
+    btn_del = new_button(BUTTON_POS(6, 4), BLUE, GRAY, WHITE, "DEL", NULL, true);
     btn_ac = new_button(BUTTON_POS(7, 4), BLUE, GRAY, WHITE, "AC", NULL, true);
 
     btn_123 = new_button(BUTTON_POS(1, 2), GRAYBLUE, GRAY, WHITE, "123", NULL, true);
@@ -124,19 +122,16 @@ void init_gui()
     btn_char_e = new_button(BUTTON_POS(4, 1), GRAYBLUE, GRAY, WHITE, "E", "E", true);
     btn_char_f = new_button(BUTTON_POS(5, 1), GRAYBLUE, GRAY, WHITE, "F", "F", true);
 
-    // *char_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
+    // *input_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
     //                    &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x};
-    char_buttons_len = sizeof(char_buttons) / sizeof(char_buttons[0]);
+    input_buttons_len = sizeof(input_buttons) / sizeof(input_buttons[0]);
 
-    // *cmd_buttons[] = {&btn_back, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc};
+    // *cmd_buttons[] = {&btn_del, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc};
     cmd_buttons_len = sizeof(cmd_buttons) / sizeof(cmd_buttons[0]);
-
-    // *fc_buttons[] = {&btn_sqrt, &btn_sin, &btn_cos};
-    fc_buttons_len = sizeof(fc_buttons) / sizeof(fc_buttons[0]);
 
     // *all_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
     //                   &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x,
-    //                   &btn_back, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc,
+    //                   &btn_del, &btn_ac, &btn_123, &btn_ext, &btn_abc, &btn_calc,
     //                   &btn_sqrt, &btn_sin, &btn_cos};
     all_buttons_len = sizeof(all_buttons) / sizeof(all_buttons[0]);
     // u16 i = 0;

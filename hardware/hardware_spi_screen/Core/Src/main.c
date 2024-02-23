@@ -158,6 +158,9 @@ int main(void)
 	{
 		draw_button4048(all_buttons[i]);
 	}
+
+	ShowScreen screen = new_screen();
+
 	while (1)
 	{
 		if (refresh_keybroad)
@@ -184,35 +187,38 @@ int main(void)
 		// 清除整行
 		if (btn_ac.pressed && btn_ac.edge)
 		{
-			LCD_ShowString(4, 8, 16, (u8 *)"                             ", 0);
-			for (int i = 0; i < gui_input_str_len; i++)
-				gui_input_str[i] = 0;
-			gui_input_str_len = 0;
+			clear_screen(&screen);
+			refresh_screen(&screen);
 		}
 		// 退格
-		if (btn_back.pressed && btn_back.edge && gui_input_str_len != 0)
+		if (btn_del.pressed && btn_del.edge)
 		{
-			LCD_ShowString(4, 8, 16, (u8 *)"                             ", 0);
-			gui_input_str[gui_input_str_len - 1] = 0;
-			gui_input_str_len--;
-			POINT_COLOR = BLACK;
-			LCD_ShowString(4, 8, 16, (u8 *)gui_input_str, 1);
+			screen_del(&screen);
+			refresh_input_aera(&screen);
 		}
 		// 添加字符
-		for (i = 0; i < char_buttons_len; i++)
+		for (i = 0; i < input_buttons_len; i++)
 		{
-			if (!(char_buttons[i]->pressed && char_buttons[i]->edge))
+			if (!(input_buttons[i]->pressed && input_buttons[i]->edge))
 				continue;
-			gui_input_str[gui_input_str_len] = char_buttons[i]->display_str[0];
-			gui_input_str_len++;
-			POINT_COLOR = BLACK;
-			LCD_ShowString(4, 8, 16, (u8 *)gui_input_str, 1);
+			screen_append(&screen, input_buttons[i]->input_str);
+			refresh_input_aera(&screen);
+		}
+		// 光标左右移动
+		if (btn_left.pressed && btn_left.edge)
+		{
+			screen_cursor_left(&screen);
+			refresh_cursor(&screen);
+		}
+		else if (btn_right.pressed && btn_right.edge)
+		{
+			screen_cursor_right(&screen);
+			refresh_cursor(&screen);
 		}
 		// 计算
 		if (btn_calc.pressed && btn_calc.edge)
 		{
-			LCD_ShowString(4, 8 + 16, 16, (u8 *)"                             ", 0);
-			int state_code = parse_to_token_list(gui_input_str);
+			int state_code = parse_to_token_list(screen.show_str);
 			if (state_code == -1)
 				continue;
 			AST_Node *node = parse_to_ast();
@@ -222,18 +228,15 @@ int main(void)
 			volatile int debug_value = 114514;
 			if (res_token->type == Int)
 			{
-				debug_value = sprintf(gui_temp_str, "%d", res_token->v.i);
+				debug_value = sprintf(screen.result_str, "%d", res_token->v.i);
 				// sprintf((char *)gui_temp_str, "%d", res_token->v.i);
-				POINT_COLOR = BLACK;
-				LCD_ShowString(4, 8 + 16, 16, (u8 *)gui_temp_str, 1);
 			}
 			else if (res_token->type == Float)
 			{
-				debug_value = sprintf(gui_temp_str, "%f", res_token->v.f);
+				debug_value = sprintf(screen.result_str, "%f", res_token->v.f);
 				// sprintf((char *)gui_temp_str, "%f", res_token->v.f);
-				POINT_COLOR = BLACK;
-				LCD_ShowString(4, 8 + 16, 16, (u8 *)gui_temp_str, 1);
 			}
+			refresh_result_area(&screen);
 			recu_free_ast(node);
 		}
 
@@ -262,10 +265,10 @@ int main(void)
 		// 	{
 		// 		all_buttons[i]->display = false;
 		// 	}
-		// 	for (i = 0; i < char_buttons_len; i++)
+		// 	for (i = 0; i < input_buttons_len; i++)
 		// 	{
-		// 		char_buttons[i]->display = true;
-		// 		char_buttons[i]->edge = true;
+		// 		input_buttons[i]->display = true;
+		// 		input_buttons[i]->edge = true;
 		// 	}
 		// 	for (i = 0; i < cmd_buttons_len; i++)
 		// 	{

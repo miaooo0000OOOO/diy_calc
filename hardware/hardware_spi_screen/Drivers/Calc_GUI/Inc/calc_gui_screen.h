@@ -19,6 +19,7 @@ extern "C"
 
 #include "stdbool.h"
 
+#define INPUT_BUFFER_MAX_LEN 40
 #include "calc_gui.h"
 
 #define GUI_SHOW_SCREEN_HEIGHT_PIXEL 120
@@ -31,6 +32,19 @@ extern "C"
         u8 cursor_position;
         u8 show_str_len;
     } ShowScreen;
+
+    ShowScreen new_screen();
+    void clear_screen(ShowScreen *screen);
+    bool screen_del(ShowScreen *screen);
+    bool screen_append(ShowScreen *screen, const char *str);
+    bool insert_string(char *str, const char *insert, int position, size_t str_size_max);
+    bool screen_input_button_pressed(ShowScreen *screen, const BUTTON4048 const *btn);
+    bool screen_cursor_left(ShowScreen *screen);
+    bool screen_cursor_right(ShowScreen *screen);
+    void refresh_cursor(ShowScreen *screen);
+    void refresh_input_aera(ShowScreen *screen);
+    void refresh_result_area(ShowScreen *screen);
+    void refresh_screen(ShowScreen *screen);
 
 #ifdef __cplusplus
 }

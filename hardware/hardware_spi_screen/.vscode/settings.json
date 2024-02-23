@@ -30,6 +30,10 @@
         "utility": "c",
         "variant": "c",
         "istream": "c",
-        "ostream": "c"
+        "ostream": "c",
+        "calc_gui_screen.h": "c",
+        "stm32f1xx_hal_gpio.h": "c",
+        "calc_gui_button.h": "c",
+        "stm32f1xx_hal.h": "c"
     }
 }

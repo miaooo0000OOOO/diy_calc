@@ -21,8 +21,7 @@ extern "C"
 #include "string.h"
 
 #include "calc_gui_button.h"
-
-#define INPUT_BUFFER_MAX_LEN 40
+#include "calc_gui_screen.h"
 
     void init_gui();
 
@@ -55,7 +54,7 @@ extern "C"
     extern BUTTON4048 btn_char_e;
     extern BUTTON4048 btn_char_f;
 
-    extern BUTTON4048 btn_back;
+    extern BUTTON4048 btn_del;
     extern BUTTON4048 btn_ac;
 
     extern BUTTON4048 btn_123;
@@ -74,14 +73,11 @@ extern "C"
     extern BUTTON4048 btn_ln;
     extern BUTTON4048 btn_tan;
 
-    extern BUTTON4048 *char_buttons[];
-    extern u16 char_buttons_len;
+    extern BUTTON4048 *input_buttons[];
+    extern u16 input_buttons_len;
 
     extern BUTTON4048 *cmd_buttons[];
     extern u16 cmd_buttons_len;
-
-    extern BUTTON4048 *fc_buttons[];
-    extern u16 fc_buttons_len;
 
     extern BUTTON4048 *all_buttons[];
     extern u16 all_buttons_len;

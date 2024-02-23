@@ -77,7 +77,8 @@ Drivers/CalcMathCore/Src/arraylist.c \
 Drivers/CalcMathCore/Src/ast.c \
 Drivers/CalcMathCore/Src/calculation.c \
 Drivers/CalcMathCore/Src/symbol_table.c \
-Drivers/CalcMathCore/Src/tokens.c 
+Drivers/CalcMathCore/Src/tokens.c \
+Drivers/Calc_GUI/Src/calc_gui_screen.c
 # Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \
 # Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/MSP3526/USER/Src/main.c \
 
