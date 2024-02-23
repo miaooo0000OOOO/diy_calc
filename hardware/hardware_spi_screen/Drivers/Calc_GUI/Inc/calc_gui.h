@@ -18,30 +18,81 @@ extern "C"
 #include "test.h"
 
 #include "stdbool.h"
+#include "string.h"
 
-#define BUTTON_H 48
-#define BUTTON_W 40
+#include "calc_gui_button.h"
 
-#define BUTTON_UNPRESSED_COLOR BLACK
-#define BUTTON_PRESSED_COLOR BLUE
-#define BUTTON_WIREFRAME_COLOR BLACK
+#define INPUT_BUFFER_MAX_LEN 40
 
-    typedef struct BUTTON4048
-    {
-        u16 left;
-        u16 top;
-        u16 bg_color_unpressed;
-        u16 bg_color_pressed;
-        u16 font_color;
-        u8 *display_str;
-        bool pressed;
-        bool edge;    // 按钮状态是否发生改变
-        bool display; // 按钮是否显示
-    } BUTTON4048;
+    void init_gui();
 
-    BUTTON4048 new_button(u16 left, u16 top, u16 bg_color_unpressed, u16 bg_color_pressed, u16 font_color, u8 *display_str, bool display);
-    void draw_button4048(BUTTON4048 *button);
-    bool button_pressed(BUTTON4048 *button);
+    extern BUTTON4048 btn1;
+    extern BUTTON4048 btn2;
+    extern BUTTON4048 btn3;
+    extern BUTTON4048 btn4;
+    extern BUTTON4048 btn5;
+    extern BUTTON4048 btn6;
+    extern BUTTON4048 btn7;
+    extern BUTTON4048 btn8;
+    extern BUTTON4048 btn9;
+    extern BUTTON4048 btn0;
+    extern BUTTON4048 btn_add;
+    extern BUTTON4048 btn_sub;
+    extern BUTTON4048 btn_div;
+    extern BUTTON4048 btn_mul;
+    extern BUTTON4048 btn_pow;
+    extern BUTTON4048 btn_eq;
+    extern BUTTON4048 btn_lp;
+    extern BUTTON4048 btn_rp;
+    extern BUTTON4048 btn_mod;
+    extern BUTTON4048 btn_x;
+    extern BUTTON4048 btn_dot;
+
+    extern BUTTON4048 btn_char_a;
+    extern BUTTON4048 btn_char_b;
+    extern BUTTON4048 btn_char_c;
+    extern BUTTON4048 btn_char_d;
+    extern BUTTON4048 btn_char_e;
+    extern BUTTON4048 btn_char_f;
+
+    extern BUTTON4048 btn_back;
+    extern BUTTON4048 btn_ac;
+
+    extern BUTTON4048 btn_123;
+    extern BUTTON4048 btn_ext;
+    extern BUTTON4048 btn_abc;
+
+    extern BUTTON4048 btn_calc;
+    extern BUTTON4048 btn_solve;
+    extern BUTTON4048 btn_left;
+    extern BUTTON4048 btn_right;
+
+    extern BUTTON4048 btn_sqrt;
+    extern BUTTON4048 btn_sin;
+    extern BUTTON4048 btn_cos;
+    extern BUTTON4048 btn_log;
+    extern BUTTON4048 btn_ln;
+    extern BUTTON4048 btn_tan;
+
+    extern BUTTON4048 *char_buttons[];
+    extern u16 char_buttons_len;
+
+    extern BUTTON4048 *cmd_buttons[];
+    extern u16 cmd_buttons_len;
+
+    extern BUTTON4048 *fc_buttons[];
+    extern u16 fc_buttons_len;
+
+    extern BUTTON4048 *all_buttons[];
+    extern u16 all_buttons_len;
+
+    // extern u16 i;
+    // u16 keybroad_state = 1;
+    extern bool refresh_keybroad;
+
+    extern char gui_input_str[INPUT_BUFFER_MAX_LEN];
+    extern char gui_temp_str[INPUT_BUFFER_MAX_LEN];
+    extern u8 gui_input_str_len;
 
 #ifdef __cplusplus
 }

@@ -47,7 +47,7 @@
 #include "stdlib.h"
 
 // math
-#include "math_core.h"
+#include "calc_math_core.h"
 
 /* USER CODE END Includes */
 
@@ -144,87 +144,29 @@ int main(void)
 	// 触摸设备初始化
 	if (tp_dev.init())
 	{
-		return;
+		return 0;
 	}
+	int i;
 
-	BUTTON4048 btn1 = new_button(0, 240, BLUE, GRAY, WHITE, "1", true);
-	BUTTON4048 btn2 = new_button(40, 240, BLUE, GRAY, WHITE, "2", true);
-	BUTTON4048 btn3 = new_button(80, 240, BLUE, GRAY, WHITE, "3", true);
-	BUTTON4048 btn4 = new_button(0, 240 + 48, BLUE, GRAY, WHITE, "4", true);
-	BUTTON4048 btn5 = new_button(40, 240 + 48, BLUE, GRAY, WHITE, "5", true);
-	BUTTON4048 btn6 = new_button(80, 240 + 48, BLUE, GRAY, WHITE, "6", true);
-	BUTTON4048 btn7 = new_button(0, 240 + 48 * 2, BLUE, GRAY, WHITE, "7", true);
-	BUTTON4048 btn8 = new_button(40, 240 + 48 * 2, BLUE, GRAY, WHITE, "8", true);
-	BUTTON4048 btn9 = new_button(80, 240 + 48 * 2, BLUE, GRAY, WHITE, "9", true);
-	BUTTON4048 btn0 = new_button(40, 240 + 48 * 3, BLUE, GRAY, WHITE, "0", true);
-	BUTTON4048 btn_add = new_button(120, 240, BLUE, GRAY, WHITE, "+", true);
-	BUTTON4048 btn_sub = new_button(120, 240 + 48, BLUE, GRAY, WHITE, "-", true);
-	BUTTON4048 btn_div = new_button(0, 240 + 48 * 3, BLUE, GRAY, WHITE, "/", true);
-	BUTTON4048 btn_mul = new_button(80, 240 + 48 * 3, BLUE, GRAY, WHITE, "*", true);
-	BUTTON4048 btn_pow = new_button(120, 240 + 48 * 2, BLUE, GRAY, WHITE, "^", true);
-	BUTTON4048 btn_eq = new_button(120, 240 + 48 * 3, BLUE, GRAY, WHITE, "=", true);
-	BUTTON4048 btn_lp = new_button(0, 240 + 48 * 4, BLUE, GRAY, WHITE, "(", true);
-	BUTTON4048 btn_rp = new_button(40, 240 + 48 * 4, BLUE, GRAY, WHITE, ")", true);
-	BUTTON4048 btn_mod = new_button(80, 240 + 48 * 4, BLUE, GRAY, WHITE, "%", true);
-	BUTTON4048 btn_x = new_button(120, 240 + 48 * 4, BLUE, GRAY, WHITE, "x", true);
+	init_gui();
 
-	BUTTON4048 btn_back = new_button(160, 240, BLUE, GRAY, WHITE, "<-", true);
-	BUTTON4048 btn_cl = new_button(160, 240 + 48, BLUE, GRAY, WHITE, "CL", true);
-	BUTTON4048 btn_cs = new_button(160, 240 + 48 * 2, BLUE, GRAY, WHITE, "CS", true);
-
-	BUTTON4048 btn_123 = new_button(280, 240, BROWN, GRAY, WHITE, "123", true);
-	BUTTON4048 btn_fc = new_button(280, 240 + 48, GRAYBLUE, GRAY, WHITE, "fc", true);
-	BUTTON4048 btn_abc = new_button(280, 240 + 48 * 2, GRAYBLUE, GRAY, WHITE, "abc", true);
-
-	BUTTON4048 btn_calc = new_button(280, 240 + 48 * 4, GRAYBLUE, GRAY, WHITE, "calc", true);
-
-	BUTTON4048 btn_sqrt = new_button(0, 240, BLUE, GRAY, WHITE, "sqrt", false);
-	BUTTON4048 btn_sin = new_button(40, 240, BLUE, GRAY, WHITE, "sin", false);
-	BUTTON4048 btn_cos = new_button(80, 240, BLUE, GRAY, WHITE, "cos", false);
-
-	BUTTON4048 *char_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
-								  &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x};
-	const u16 char_buttons_len = sizeof(char_buttons) / sizeof(char_buttons[0]);
-
-	BUTTON4048 *cmd_buttons[] = {&btn_back, &btn_cl, &btn_cs, &btn_123, &btn_fc, &btn_abc, &btn_calc};
-	const u16 cmd_buttons_len = sizeof(cmd_buttons) / sizeof(cmd_buttons[0]);
-
-	BUTTON4048 *fc_buttons[] = {&btn_sqrt, &btn_sin, &btn_cos};
-	const u16 fc_buttons_len = sizeof(fc_buttons) / sizeof(fc_buttons[0]);
-
-	BUTTON4048 *all_buttons[] = {&btn1, &btn2, &btn3, &btn4, &btn5, &btn6, &btn7, &btn8, &btn9, &btn0,
-								 &btn_add, &btn_sub, &btn_mul, &btn_div, &btn_pow, &btn_eq, &btn_lp, &btn_rp, &btn_mod, &btn_x,
-								 &btn_back, &btn_cl, &btn_cs, &btn_123, &btn_fc, &btn_abc, &btn_calc,
-								 &btn_sqrt, &btn_sin, &btn_cos};
-	const u16 all_buttons_len = sizeof(all_buttons) / sizeof(all_buttons[0]);
-	u16 i = 0;
-	u16 keybroad_state = 1;
-	bool refrash_keybroad = true;
-
-	u8 input_str[40] = {0};
-	u8 temp_str[40] = {0};
-	u8 input_str_len = 0;
-	float *fp;
-	float tempf;
-	int *ip;
-
-	refrash_keybroad = false;
+	refresh_keybroad = false;
 	LCD_Fill(0, 0, lcddev.width, lcddev.height, WHITE);
 	POINT_COLOR = LGRAY;
-	LCD_DrawFillRectangle(0, lcddev.height / 2, lcddev.width, lcddev.height);
-	for (i = 0; i < all_buttons_len; i++)
+	LCD_DrawFillRectangle(0, 480 - 7 * 48, lcddev.width, lcddev.height);
+	for (int i = 0; i < all_buttons_len; i++)
 	{
 		draw_button4048(all_buttons[i]);
 	}
 	while (1)
 	{
-		if (refrash_keybroad)
+		if (refresh_keybroad)
 		{
-			refrash_keybroad = false;
+			refresh_keybroad = false;
 			LCD_Fill(0, 0, lcddev.width, lcddev.height, WHITE);
 			POINT_COLOR = LGRAY;
-			LCD_DrawFillRectangle(0, lcddev.height / 2, lcddev.width, lcddev.height);
-			for (i = 0; i < all_buttons_len; i++)
+			LCD_DrawFillRectangle(0, 480 - 7 * 48, lcddev.width, lcddev.height);
+			for (int i = 0; i < all_buttons_len; i++)
 			{
 				all_buttons[i]->edge = true;
 				draw_button4048(all_buttons[i]);
@@ -240,37 +182,37 @@ int main(void)
 		}
 
 		// 清除整行
-		if (btn_cl.pressed && btn_cl.edge)
+		if (btn_ac.pressed && btn_ac.edge)
 		{
-			LCD_ShowString(4, 8, 16, "                             ", 0);
-			for (i = 0; i < input_str_len; i++)
-				input_str[i] = 0;
-			input_str_len = 0;
+			LCD_ShowString(4, 8, 16, (u8 *)"                             ", 0);
+			for (int i = 0; i < gui_input_str_len; i++)
+				gui_input_str[i] = 0;
+			gui_input_str_len = 0;
 		}
 		// 退格
-		if (btn_back.pressed && btn_back.edge && input_str_len != 0)
+		if (btn_back.pressed && btn_back.edge && gui_input_str_len != 0)
 		{
-			LCD_ShowString(4, 8, 16, "                             ", 0);
-			input_str[input_str_len - 1] = 0;
-			input_str_len--;
+			LCD_ShowString(4, 8, 16, (u8 *)"                             ", 0);
+			gui_input_str[gui_input_str_len - 1] = 0;
+			gui_input_str_len--;
 			POINT_COLOR = BLACK;
-			LCD_ShowString(4, 8, 16, input_str, 1);
+			LCD_ShowString(4, 8, 16, (u8 *)gui_input_str, 1);
 		}
 		// 添加字符
 		for (i = 0; i < char_buttons_len; i++)
 		{
 			if (!(char_buttons[i]->pressed && char_buttons[i]->edge))
 				continue;
-			input_str[input_str_len] = char_buttons[i]->display_str[0];
-			input_str_len++;
+			gui_input_str[gui_input_str_len] = char_buttons[i]->display_str[0];
+			gui_input_str_len++;
 			POINT_COLOR = BLACK;
-			LCD_ShowString(4, 8, 16, input_str, 1);
+			LCD_ShowString(4, 8, 16, (u8 *)gui_input_str, 1);
 		}
 		// 计算
 		if (btn_calc.pressed && btn_calc.edge)
 		{
-			LCD_ShowString(4, 8 + 16, 16, "                             ", 0);
-			int state_code = parse_to_token_list(input_str);
+			LCD_ShowString(4, 8 + 16, 16, (u8 *)"                             ", 0);
+			int state_code = parse_to_token_list(gui_input_str);
 			if (state_code == -1)
 				continue;
 			AST_Node *node = parse_to_ast();
@@ -280,62 +222,59 @@ int main(void)
 			volatile int debug_value = 114514;
 			if (res_token->type == Int)
 			{
-				ip = (int *)&res_token->value;
-				debug_value = sprintf(temp_str, "%d", *ip);
+				debug_value = sprintf(gui_temp_str, "%d", res_token->v.i);
+				// sprintf((char *)gui_temp_str, "%d", res_token->v.i);
 				POINT_COLOR = BLACK;
-				LCD_ShowString(4, 8 + 16, 16, temp_str, 1);
+				LCD_ShowString(4, 8 + 16, 16, (u8 *)gui_temp_str, 1);
 			}
 			else if (res_token->type == Float)
 			{
-				fp = (float *)&res_token->value;
-				tempf = *fp;
-				debug_value = sprintf(temp_str, "%f", tempf);
-				// printf("%f\n", tempf);
-				// gcvt(tempf, 7, temp_str);
+				debug_value = sprintf(gui_temp_str, "%f", res_token->v.f);
+				// sprintf((char *)gui_temp_str, "%f", res_token->v.f);
 				POINT_COLOR = BLACK;
-				LCD_ShowString(4, 8 + 16, 16, temp_str, 1);
+				LCD_ShowString(4, 8 + 16, 16, (u8 *)gui_temp_str, 1);
 			}
 			recu_free_ast(node);
 		}
 
-		if (btn_fc.pressed && btn_fc.edge)
-		{
-			for (i = 0; i < all_buttons_len; i++)
-			{
-				all_buttons[i]->display = false;
-			}
-			for (i = 0; i < fc_buttons_len; i++)
-			{
-				fc_buttons[i]->display = true;
-				fc_buttons[i]->edge = true;
-			}
-			for (i = 0; i < cmd_buttons_len; i++)
-			{
-				cmd_buttons[i]->display = true;
-				cmd_buttons[i]->edge = true;
-			}
-			refrash_keybroad = true;
-			continue;
-		}
-		else if (btn_123.pressed && btn_123.edge)
-		{
-			for (i = 0; i < all_buttons_len; i++)
-			{
-				all_buttons[i]->display = false;
-			}
-			for (i = 0; i < char_buttons_len; i++)
-			{
-				char_buttons[i]->display = true;
-				char_buttons[i]->edge = true;
-			}
-			for (i = 0; i < cmd_buttons_len; i++)
-			{
-				cmd_buttons[i]->display = true;
-				cmd_buttons[i]->edge = true;
-			}
-			refrash_keybroad = true;
-			continue;
-		}
+		// if (btn_ext.pressed && btn_ext.edge)
+		// {
+		// 	for (i = 0; i < all_buttons_len; i++)
+		// 	{
+		// 		all_buttons[i]->display = false;
+		// 	}
+		// 	for (i = 0; i < fc_buttons_len; i++)
+		// 	{
+		// 		fc_buttons[i]->display = true;
+		// 		fc_buttons[i]->edge = true;
+		// 	}
+		// 	for (i = 0; i < cmd_buttons_len; i++)
+		// 	{
+		// 		cmd_buttons[i]->display = true;
+		// 		cmd_buttons[i]->edge = true;
+		// 	}
+		// 	refresh_keybroad = true;
+		// 	continue;
+		// }
+		// else if (btn_123.pressed && btn_123.edge)
+		// {
+		// 	for (i = 0; i < all_buttons_len; i++)
+		// 	{
+		// 		all_buttons[i]->display = false;
+		// 	}
+		// 	for (i = 0; i < char_buttons_len; i++)
+		// 	{
+		// 		char_buttons[i]->display = true;
+		// 		char_buttons[i]->edge = true;
+		// 	}
+		// 	for (i = 0; i < cmd_buttons_len; i++)
+		// 	{
+		// 		cmd_buttons[i]->display = true;
+		// 		cmd_buttons[i]->edge = true;
+		// 	}
+		// 	refresh_keybroad = true;
+		// 	continue;
+		// }
 
 		// 按钮状态
 		for (i = 0; i < all_buttons_len; i++)

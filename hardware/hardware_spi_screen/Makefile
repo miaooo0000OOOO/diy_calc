@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = screen
+TARGET = hardware_spi_screen
 
 
 ######################################
@@ -72,7 +72,12 @@ Drivers/MSP3526/USER/Src/test.c \
 Drivers/SYSTEM/Src/delay.c \
 Core/Src/spi.c \
 Drivers/Calc_GUI/Src/calc_gui.c \
-Core/Src/math_core.c
+Drivers/Calc_GUI/Src/calc_gui_button.c \
+Drivers/CalcMathCore/Src/arraylist.c \
+Drivers/CalcMathCore/Src/ast.c \
+Drivers/CalcMathCore/Src/calculation.c \
+Drivers/CalcMathCore/Src/symbol_table.c \
+Drivers/CalcMathCore/Src/tokens.c 
 # Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \
 # Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/STM32F10x_FWLib/src/stm32f10x_spi.c \# Drivers/MSP3526/USER/Src/main.c \
 
@@ -143,7 +148,8 @@ C_INCLUDES =  \
 -IDrivers/MSP3526/HARDWARE/TOUCH/Inc \
 -IDrivers/MSP3526/USER/Inc \
 -IDrivers/SYSTEM/Inc \
--IDrivers/Calc_GUI/Inc
+-IDrivers/Calc_GUI/Inc \
+-IDrivers/CalcMathCore/Inc
 # -IDrivers/STM32F10x_FWLib/inc
 # -IDrivers/STM32F10x_FWLib/inc# -IDrivers/STM32F10x_FWLib/inc# -IDrivers/STM32F10x_FWLib/inc# -IDrivers/STM32F10x_FWLib/inc# -IDrivers/STM32F10x_FWLib/inc# -IDrivers/STM32F10x_FWLib/inc
 
@@ -168,7 +174,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32F103RCTx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys 
+LIBS = -lc -lm -lnosys -u_scanf_float -u_printf_float
 LIBDIR = 
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
