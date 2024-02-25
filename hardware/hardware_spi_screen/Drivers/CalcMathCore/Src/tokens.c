@@ -155,11 +155,15 @@ bool check_adja_char_stynax(const char c, const char prev_c)
 char str_is_int_or_float(const char str[])
 {
     const usize len = strlen(str);
+    if (len <= 0)
+    {
+        return 0; // Err
+    }
     if (str[0] == '0') // 0开头的16进制或8进制数或2进制数
     {
         if (len <= 1)
         {
-            return 0; // Err
+            return 2; // 十进制数字0
         }
         switch (str[1])
         {

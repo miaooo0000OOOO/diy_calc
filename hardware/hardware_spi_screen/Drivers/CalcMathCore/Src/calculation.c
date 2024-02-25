@@ -43,7 +43,9 @@ Token *cast_int2float(const Token *const t)
 // return NULL when error
 Token *powii(const Token *const l_int, const Token *const r_int)
 {
-    assert(l_int->type == Int && r_int->type == Int);
+    // assert(l_int->type == Int && r_int->type == Int);
+    while (!(l_int->type == Int && r_int->type == Int))
+        ;
     int li, ri, i, acc;
     bool neg = false;
     li = l_int->v.i;
@@ -116,6 +118,9 @@ AST_Node *op_polymorphism(const AST_Node *const base_l, const AST_Node *const ba
     Token *l, *r;
     l = dump_token(base_l->token);
     r = dump_token(base_r->token);
+
+    // 拥有res, l, r的所有权
+
     // 类型转换
     if (l->type == Float && r->type == Int)
     {
@@ -504,7 +509,12 @@ float get_delta(const AST_Node *const node, float x)
     tr = calc(node->right);
     tl = transfrom_token_and_free(cast_int2float, tl);
     tr = transfrom_token_and_free(cast_int2float, tr);
-    return tl->v.f - tr->v.f;
+    float l, r;
+    l = tl->v.f;
+    r = tr->v.f;
+    free(tl);
+    free(tr);
+    return l - r;
 }
 
 float calc_x_expr(const AST_Node *const node, float x)
@@ -674,5 +684,98 @@ AST_Node *solve_dichotomy(const AST_Node *const node, const Token *const left_x,
     else
     {
         return NULL;
+    }
+}
+
+OptionFloat some_float(float value)
+{
+    OptionFloat of;
+    of.valid = true;
+    of.value = value;
+    return of;
+}
+
+OptionFloat none_float()
+{
+    OptionFloat of;
+    of.valid = false;
+    of.value = 0;
+    return of;
+}
+
+OptionFloat solve_dichotomy_float(const AST_Node *const node, float left_x, float right_x)
+{
+    assert(node != NULL && node->token->type == Eq);
+    float xl, xr, xm;
+    float step, l, r, m;
+    int i, j;
+    bool break_out = false;
+    xl = left_x;
+    xr = right_x;
+    l = get_delta(node, xl);
+    r = get_delta(node, xr);
+    if (l * r > 0)
+        for (i = 1; i < 4; i++)
+        {
+            step = (xr - xl) / simple_pow(2, i);
+            for (j = 0; j < simple_pow(2, i); j += 2)
+            {
+                xr = xl + (step + step * j);
+                r = get_delta(node, xr);
+                if (l * r <= 0)
+                {
+                    break_out = true;
+                    break;
+                }
+            }
+            if (break_out)
+                break;
+        }
+    if (l == 0.)
+        return some_float(xl);
+    else if (r == 0.)
+    {
+        return some_float(xr);
+    }
+    if (l * r > 0)
+    {
+        // solution not found
+        return none_float();
+    }
+    xm = NAN;
+    float prev_xm;
+    for (i = 0; i < 1000; i++)
+    {
+        prev_xm = xm;
+        xm = (xl + xr) / 2.;
+        if (xm == prev_xm)
+        {
+            return some_float(xm);
+        }
+        if (xr - xl <= FLT_MIN * i)
+            return some_float(xm);
+        l = get_delta(node, xl);
+        // r = get_delta(node, xr);
+        m = get_delta(node, xm);
+        if (m == 0.)
+        {
+            return some_float(xm);
+        }
+        if (l * m < 0)
+        {
+            xr = xm;
+        }
+        else
+        {
+            xl = xm;
+        }
+    }
+    if (xr - xl <= EPSILON)
+    {
+        return some_float(xm);
+    }
+    else
+    {
+        return none_float();
     }
 }

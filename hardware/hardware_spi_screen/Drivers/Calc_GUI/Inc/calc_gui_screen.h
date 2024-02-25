@@ -25,10 +25,13 @@ extern "C"
 #define GUI_SHOW_SCREEN_HEIGHT_PIXEL 120
 #define GUI_SHOW_SCREEN_WIDTH_PIXEL 480
 
+#define GUI_WHITESPACE_LINE "                                        "
+
     typedef struct ShowScreen
     {
         char show_str[INPUT_BUFFER_MAX_LEN];
         char result_str[INPUT_BUFFER_MAX_LEN];
+        char third_line_str[INPUT_BUFFER_MAX_LEN];
         u8 cursor_position;
         u8 show_str_len;
     } ShowScreen;

@@ -3,9 +3,9 @@
 ShowScreen new_screen()
 {
     ShowScreen screen;
-    screen.cursor_position = 0;
     memset(screen.show_str, '\0', sizeof(screen.show_str));
     memset(screen.result_str, '\0', sizeof(screen.result_str));
+    memset(screen.third_line_str, '\0', sizeof(screen.third_line_str));
     screen.show_str_len = 0;
     screen.cursor_position = 0;
     return screen;
@@ -15,6 +15,7 @@ void clear_screen(ShowScreen *screen)
 {
     memset(screen->show_str, '\0', sizeof(screen->show_str));
     memset(screen->result_str, '\0', sizeof(screen->result_str));
+    memset(screen->third_line_str, '\0', sizeof(screen->third_line_str));
     screen->show_str_len = 0;
     screen->cursor_position = 0;
 }
@@ -108,20 +109,28 @@ void refresh_cursor(ShowScreen *screen)
 void refresh_input_aera(ShowScreen *screen)
 {
     refresh_cursor(screen);
-    LCD_ShowString(4, 8, 16, (u8 *)"                             ", 0);
+    LCD_ShowString(4, 8, 16, (u8 *)GUI_WHITESPACE_LINE, 0);
     POINT_COLOR = BLACK;
     LCD_ShowString(4, 8, 16, (u8 *)screen->show_str, 1);
 }
 
 void refresh_result_area(ShowScreen *screen)
 {
-    LCD_ShowString(4, 8 + 16 + 4, 16, (u8 *)"                             ", 0);
+    LCD_ShowString(4, 8 + 16 + 4, 16, (u8 *)GUI_WHITESPACE_LINE, 0);
     POINT_COLOR = BLACK;
     LCD_ShowString(4, 8 + 16 + 4, 16, (u8 *)screen->result_str, 1);
+}
+
+void refresh_third_line(ShowScreen *screen)
+{
+    LCD_ShowString(4, 8 + 16 + 4 + 16, 16, (u8 *)GUI_WHITESPACE_LINE, 0);
+    POINT_COLOR = BLACK;
+    LCD_ShowString(4, 8 + 16 + 4 + 16, 16, (u8 *)screen->third_line_str, 1);
 }
 
 void refresh_screen(ShowScreen *screen)
 {
     refresh_input_aera(screen);
     refresh_result_area(screen);
+    refresh_third_line(screen);
 }

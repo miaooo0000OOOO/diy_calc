@@ -12,7 +12,7 @@ bool char_is_symbol(const char c)
 
 bool char_in_alphabet(const char c)
 {
-    return 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z';
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
 
 bool char_in_alphabet_and_underline(const char c)
@@ -22,7 +22,12 @@ bool char_in_alphabet_and_underline(const char c)
 
 bool char_in_hex(const char c)
 {
-    return char_in_num(c) || 'a' <= c && c <= 'f' || 'A' <= c && c <= 'F';
+    return char_in_num(c) || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F');
+}
+
+bool char_in_a2f(const char c)
+{
+    return ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F');
 }
 
 // 返回拥有所有权的Token*
@@ -89,7 +94,7 @@ int gtoken_ind = 0;
 // adja_char_stynax[i][j] 是否合法
 // 字符映射i，上一个字符映射j
 // 合法 0 非法 1
-const u8 adja_char_stynax[8][8] = {
+const char adja_char_stynax[8][8] = {
     // 数字 +*/^% - ( ) = 字母 空
     {0, 0, 0, 0, 1, 0, 0, 0}, // 数字
     {0, 1, 1, 0, 0, 1, 0, 1}, //+*/^%
@@ -147,14 +152,18 @@ bool check_adja_char_stynax(const char c, const char prev_c)
 
 // private
 // 0 Err 1 十六进制整数 2 十进制整数 3 八进制整数 4 二进制整数 5 浮点数
-u8 str_is_int_or_float(const char str[])
+char str_is_int_or_float(const char str[])
 {
     const usize len = strlen(str);
+    if (len <= 0)
+    {
+        return 0; // Err
+    }
     if (str[0] == '0') // 0开头的16进制或8进制数或2进制数
     {
         if (len <= 1)
         {
-            return 0; // Err
+            return 2; // 十进制数字0
         }
         switch (str[1])
         {
@@ -194,7 +203,7 @@ u8 str_is_int_or_float(const char str[])
 unsigned long strbintol(const char str[], const usize len)
 {
     assert(len > 2);
-    assert(str[0] == '0' && str[1] == 'b' || str[1] == 'B');
+    assert(str[0] == '0' && (str[1] == 'b' || str[1] == 'B'));
     unsigned long n = 0;
     for (usize i = 2; i < len; i++)
     {
@@ -212,9 +221,13 @@ unsigned long strbintol(const char str[], const usize len)
 int parse_to_token_list(const char str[])
 {
     const usize len = strlen(str);
+    if (len == 0)
+    {
+        return -1;
+    }
     usize i;
     usize j;
-    char c;
+    char c = '\0';
     char prev_c = '\0';
     int parenthesis_layer = 0;
     for (i = j = 0; i < len; i++, j++)
@@ -293,7 +306,8 @@ int parse_to_token_list(const char str[])
             if (char_in_num(c))
             {
                 // 数字
-                switch (str_is_int_or_float(&str[i]))
+                int num_type = str_is_int_or_float(&str[i]);
+                switch (num_type)
                 {
                 case 0: // Err
                     return -1;
@@ -310,8 +324,40 @@ int parse_to_token_list(const char str[])
                     token_list[j].type = Int;
                     token_list[j].v.i = strtoul(&str[i], NULL, 0);
                 }
+                switch (num_type)
+                {
+                case 1:
+                    i += 2;
+                    break;
+                case 3:
+                    i++;
+                    break;
+                case 4:
+                    i += 2;
+                    break;
+                }
                 for (; i < len; i++)
                 {
+                    if (num_type == 1 && str[i] == '.') // 十六进制
+                    {
+                        return -1;
+                    }
+                    else if (num_type == 2 && char_in_a2f(str[i])) // 十进制
+                    {
+                        // 含有十六进制字符
+                        return -1;
+                    }
+                    else if (num_type == 3 && (str[i] == '8' || str[i] == '9' || char_in_a2f(str[i]))) // 八进制数
+                    {
+                        // 含有十、十六进制字符
+                        return -1;
+                    }
+                    else if (num_type == 4 && (char_in_hex(str[i]) && !(str[i] == '0' || str[i] == '1'))) // 二进制数
+                    {
+                        // 含有八、十、十六进制字符
+                        return -1;
+                    }
+
                     if (!(str[i] == '.' || char_in_hex(str[i]) || str[i] == 'x' || str[i] == 'X'))
                     {
                         break;
@@ -323,7 +369,7 @@ int parse_to_token_list(const char str[])
             {
                 // 函数或变量
 
-                u8 *name = malloc(sizeof(u8) * 16);
+                char *name = malloc(sizeof(char) * 16);
                 usize k;
                 for (k = i; k < len + 1; k++)
                 {
@@ -338,7 +384,7 @@ int parse_to_token_list(const char str[])
                         {
                             token_list[j].type = Var;
                             symbol_table[symbol_table_len].type = Real;
-                            symbol_table[symbol_table_len].name = name;
+                            symbol_table[symbol_table_len].name = (char *)name;
                             symbol_table[symbol_table_len].data = NULL;
                             symbol_table_len++;
                         }
@@ -397,7 +443,7 @@ void print_terimal_token(const Token *const t, const bool newline)
 void print_token_list()
 {
     int i;
-    Token this_token;
+    // Token this_token;
     for (i = 0; i < tokens_len; i++)
     {
         switch (token_list[i].type)
