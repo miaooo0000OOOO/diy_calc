@@ -1,6 +1,6 @@
 # tool macros
 CC := gcc
-CFLAGS := -g 
+CFLAGS := -g -fsanitize=address -fno-omit-frame-pointer 
 DBGFLAGS := 
 CCOBJFLAGS := $(CFLAGS) -c
 

@@ -248,10 +248,19 @@ AST_Node *deep_copy_node(const AST_Node *const node)
 
 void recu_free_ast(const AST_Node *const node)
 {
+    deep_free_ast(node);
+    free(node);
+}
+
+void deep_free_ast(const AST_Node *const node)
+{
     if (node == NULL)
         return;
     if (node->token != NULL)
         free(node->token);
-    recu_free_ast(node->right);
-    recu_free_ast(node->left);
+    deep_free_ast(node->right);
+    free(node->right);
+    deep_free_ast(node->left);
+    free(node->left);
+    // free(node);
 }

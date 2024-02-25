@@ -84,22 +84,19 @@ int main()
             scanf("%f", &xl);
             printf("right x:");
             scanf("%f", &xr);
-            Token *temp_xl_token = new_token_from_float(xl);
-            Token *temp_xr_token = new_token_from_float(xr);
-            AST_Node *solution = solve_dichotomy(node, temp_xl_token, temp_xr_token);
-            free(temp_xl_token);
-            free(temp_xr_token);
-            if (solution == NULL)
+            OptionFloat solution = solve_dichotomy_float(node, xl, xr);
+            if (!solution.valid)
             {
                 recu_free_ast(node);
                 continue;
             }
             printf("有一解为\n");
-            print_ast(solution, 0);
-            recu_free_ast(solution);
+            // print_ast(solution, 0);
+            printf("x=%f\n", solution.value);
             Token *var_x = get_var_value("x");
             printf("误差为\n");
             printf("abs(left-right): %f\n", fabs(get_delta(node, var_x->v.f)));
+            free(var_x);
         }
         else
         {
