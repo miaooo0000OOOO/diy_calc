@@ -715,7 +715,7 @@ OptionFloat solve_dichotomy_float(const AST_Node *const node, float left_x, floa
     l = get_delta(node, xl);
     r = get_delta(node, xr);
     if (l * r > 0)
-        for (i = 1; i < 4; i++)
+        for (i = 1; i < 8; i++)
         {
             step = (xr - xl) / simple_pow(2, i);
             for (j = 0; j < simple_pow(2, i); j += 2)
@@ -744,7 +744,7 @@ OptionFloat solve_dichotomy_float(const AST_Node *const node, float left_x, floa
     }
     xm = NAN;
     float prev_xm;
-    for (i = 0; i < 1000; i++)
+    for (i = 0; i < 100000; i++)
     {
         prev_xm = xm;
         xm = (xl + xr) / 2.;
