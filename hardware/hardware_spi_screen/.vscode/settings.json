@@ -34,6 +34,11 @@
         "calc_gui_screen.h": "c",
         "stm32f1xx_hal_gpio.h": "c",
         "calc_gui_button.h": "c",
-        "stm32f1xx_hal.h": "c"
+        "stm32f1xx_hal.h": "c",
+        "symbol_table.h": "c",
+        "calculation.h": "c",
+        "tokens.h": "c",
+        "stdio.h": "c",
+        "type.h": "c"
     }
 }

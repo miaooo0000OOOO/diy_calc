@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include "type.h"
-#include "symbol_table.h"
 
 typedef enum TokenType
 {
@@ -40,6 +39,8 @@ typedef struct Token
     TokenType type;
     TokenValue v;
 } Token; // size 8B
+
+#include "symbol_table.h"
 
 extern Token token_list[1024];
 extern int tokens_len;

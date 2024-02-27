@@ -307,6 +307,8 @@ int main(void)
     }
 
     ShowScreen screen = new_screen();
+    assign_real_var("e", 2.718282);
+    assign_real_var("pi", 3.141593);
 
     while (1)
     {
@@ -402,45 +404,6 @@ int main(void)
             recu_free_ast(node);
             free(res_token);
         }
-
-        // if (btn_ext.pressed && btn_ext.edge)
-        // {
-        // 	for (i = 0; i < all_buttons_len; i++)
-        // 	{
-        // 		all_buttons[i]->display = false;
-        // 	}
-        // 	for (i = 0; i < fc_buttons_len; i++)
-        // 	{
-        // 		fc_buttons[i]->display = true;
-        // 		fc_buttons[i]->edge = true;
-        // 	}
-        // 	for (i = 0; i < cmd_buttons_len; i++)
-        // 	{
-        // 		cmd_buttons[i]->display = true;
-        // 		cmd_buttons[i]->edge = true;
-        // 	}
-        // 	refresh_keybroad = true;
-        // 	continue;
-        // }
-        // else if (btn_123.pressed && btn_123.edge)
-        // {
-        // 	for (i = 0; i < all_buttons_len; i++)
-        // 	{
-        // 		all_buttons[i]->display = false;
-        // 	}
-        // 	for (i = 0; i < input_buttons_len; i++)
-        // 	{
-        // 		input_buttons[i]->display = true;
-        // 		input_buttons[i]->edge = true;
-        // 	}
-        // 	for (i = 0; i < cmd_buttons_len; i++)
-        // 	{
-        // 		cmd_buttons[i]->display = true;
-        // 		cmd_buttons[i]->edge = true;
-        // 	}
-        // 	refresh_keybroad = true;
-        // 	continue;
-        // }
 
         // 按钮状态
         for (i = 0; i < all_buttons_len; i++)

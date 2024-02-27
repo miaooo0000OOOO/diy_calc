@@ -35,6 +35,8 @@ extern "C"
     extern BUTTON4048 btn8;
     extern BUTTON4048 btn9;
     extern BUTTON4048 btn0;
+    extern BUTTON4048 btn_e;
+    extern BUTTON4048 btn_pi;
     extern BUTTON4048 btn_add;
     extern BUTTON4048 btn_sub;
     extern BUTTON4048 btn_div;
@@ -58,7 +60,6 @@ extern "C"
     extern BUTTON4048 btn_ac;
 
     extern BUTTON4048 btn_123;
-    extern BUTTON4048 btn_ext;
     extern BUTTON4048 btn_abc;
 
     extern BUTTON4048 btn_calc;

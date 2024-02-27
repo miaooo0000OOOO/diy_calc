@@ -65,9 +65,13 @@ Token *powii(const Token *const l_int, const Token *const r_int)
     }
     // assert(ri > 0);
     acc = 1;
+    bool overflow = false;
     for (i = 0; i < ri; i++)
     {
-        acc *= li;
+        overflow = __builtin_smul_overflow(acc, li, &acc);
+        if (overflow)
+            return NULL;
+        // acc *= li;
     }
     Token *const res = malloc(sizeof(Token));
     if (neg)
@@ -416,23 +420,6 @@ AST_Node *func_call(const AST_Node *const fn_node)
     }
 }
 
-// 返回拥有所有权的Token*
-// return NULL when var not found
-Token *get_var_value(const char *name)
-{
-    for (int i = 0; i < symbol_table_len; i++)
-    {
-        if (strcmp(symbol_table[i].name, name) == 0)
-        {
-            Token *res = malloc((sizeof(Token)));
-            res->type = Float;
-            res->v.p = symbol_table[i].data;
-            return res;
-        }
-    }
-    return NULL;
-}
-
 // 返回拥有所有权的AST_Node*
 // return NULL when error
 AST_Node *recu_calc(const AST_Node *const node)
@@ -485,20 +472,6 @@ Token *calc(const AST_Node *const node)
     Token *ret = dump_token(res->token);
     recu_free_ast(res);
     return ret;
-}
-
-bool assign_real_var(const char *name, const float value)
-{
-    for (int i = 0; i < symbol_table_len; i++)
-    {
-        if (strcmp(symbol_table[i].name, name) == 0)
-        {
-            float *fp = (float *)&symbol_table[i].data;
-            *fp = value;
-            return true;
-        }
-    }
-    return false;
 }
 
 float get_delta(const AST_Node *const node, float x)
@@ -664,7 +637,8 @@ AST_Node *solve_dichotomy(const AST_Node *const node, const Token *const left_x,
     {
         l = get_delta(node, xl);
         r = get_delta(node, xr);
-        xm = (xl + xr) / 2.;
+        // xm = (xl + xr) / 2.;
+        xm = l + (r - l) / 2.;
         m = get_delta(node, xm);
         if (xr - xl <= __FLT_MIN__ * 10 || m == 0.)
             return ast_x_eq_float(xm);

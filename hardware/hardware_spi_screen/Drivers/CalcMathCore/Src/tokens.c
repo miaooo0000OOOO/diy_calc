@@ -385,7 +385,7 @@ int parse_to_token_list(const char str[])
                             token_list[j].type = Var;
                             symbol_table[symbol_table_len].type = Real;
                             symbol_table[symbol_table_len].name = (char *)name;
-                            symbol_table[symbol_table_len].data = NULL;
+                            symbol_table[symbol_table_len].data.p = NULL;
                             symbol_table_len++;
                         }
                         token_list[j].v.p = name;
