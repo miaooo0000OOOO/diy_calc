@@ -4,3 +4,4 @@ hardware/hardware_spi_screen/build/*
 hardware/software_spi_screen/build/*
 software/math_core/bin/*
 software/math_core/obj/*
+**/*.zip
