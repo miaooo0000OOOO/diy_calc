@@ -307,6 +307,9 @@ int main(void)
     }
 
     ShowScreen screen = new_screen();
+
+    declare_new_var("e");
+    declare_new_var("pi");
     assign_real_var("e", 2.718282);
     assign_real_var("pi", 3.141593);
 
