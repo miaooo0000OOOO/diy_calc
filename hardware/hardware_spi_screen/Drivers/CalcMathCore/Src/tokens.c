@@ -357,8 +357,11 @@ int parse_to_token_list(const char str[])
                         // 含有八、十、十六进制字符
                         return -1;
                     }
-
-                    if (!(str[i] == '.' || char_in_hex(str[i]) || str[i] == 'x' || str[i] == 'X'))
+                    if (str[i] == 'x' || str[i] == 'X')
+                    {
+                        return -1;
+                    }
+                    if (!(str[i] == '.' || char_in_hex(str[i])))
                     {
                         break;
                     }
