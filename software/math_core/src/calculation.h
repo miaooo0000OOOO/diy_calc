@@ -23,4 +23,8 @@ AST_Node *solve_dichotomy(const AST_Node *const node, const Token *const left_x,
 OptionFloat solve_dichotomy_float(const AST_Node *const node, float left_x, float right_x);
 float get_delta(const AST_Node *const node, float x);
 Token *get_var_value(const char *name);
+
+// Internal helper functions
+static Token *transform_token_and_free(Token *f(const Token *const t), Token *t);
+static AST_Node *transform_ast_and_free(AST_Node *f(const AST_Node *const node), AST_Node *node);
 #endif

@@ -4,7 +4,7 @@
 // 输入拥有所有权的Token*
 // 消耗t
 // return NULL when t == NULL
-Token *transfrom_token_and_free(Token *f(const Token *const t), Token *t)
+static Token *transform_token_and_free(Token *f(const Token *const t), Token *t)
 {
     if (t == NULL)
         return NULL;
@@ -17,7 +17,7 @@ Token *transfrom_token_and_free(Token *f(const Token *const t), Token *t)
 // 输入拥有所有权的AST_Node*
 // 消耗node
 // return NULL when node == NULL
-AST_Node *transfrom_ast_and_free(AST_Node *f(const AST_Node *const node), AST_Node *node)
+static AST_Node *transform_ast_and_free(AST_Node *f(const AST_Node *const node), AST_Node *node)
 {
     if (node == NULL)
         return NULL;
@@ -106,141 +106,221 @@ Token *divii(const Token *const l_int, const Token *const r_int)
     return res;
 }
 
-// 返回持有所有权的AST_Node*
-// return NULL when error
-AST_Node *op_polymorphism(const AST_Node *const base_l, const AST_Node *const base_r, const TokenType op)
+// 计算二元运算并返回结果节点
+// 优化版本:简化重复逻辑,统一错误处理
+static AST_Node *calculate_binary_op(Token *l, Token *r, TokenType op, AST_Node *res)
 {
-    assert(base_l != NULL && base_r != NULL);
-    AST_Node *res, *ret;
-    res = malloc(sizeof(AST_Node));
-    res->left = res->right = NULL;
-    res->token = NULL;
-    Token *l, *r;
-    l = dump_token(base_l->token);
-    r = dump_token(base_r->token);
-
-    // 拥有res, l, r的所有权
-
-    // 类型转换
-    if (l->type == Float && r->type == Int)
-    {
-        r = transfrom_token_and_free(cast_int2float, r);
-    }
-    else if (l->type == Int && r->type == Float)
-    {
-        l = transfrom_token_and_free(cast_int2float, l);
-    }
-
-    // 计算
+    // 类型已经统一,直接计算
     if (l->type == Float && r->type == Float)
     {
-        float *const lp = &l->v.f;
-        const float *const rp = &r->v.f;
         switch (op)
         {
         case Add:
-            *lp += *rp;
+            l->v.f += r->v.f;
             break;
         case Sub:
-            *lp -= *rp;
+            l->v.f -= r->v.f;
             break;
         case Mul:
-            *lp *= *rp;
+            l->v.f *= r->v.f;
             break;
         case Div:
-            // error x/0
-            if (*rp == 0.)
-            {
-                free(l);
-                free(r);
-                recu_free_ast(res);
-                return NULL;
-            }
-            *lp /= *rp;
+            if (r->v.f == 0.f) goto error; // x/0 error
+            l->v.f /= r->v.f;
             break;
         case Mod:
-            // error x%0
-            if (*rp == 0.)
-            {
-                free(l);
-                free(r);
-                recu_free_ast(res);
-                return NULL;
-            }
-            *lp = fmod(*lp, *rp);
+            if (r->v.f == 0.f) goto error; // x%0 error
+            l->v.f = fmodf(l->v.f, r->v.f);
             break;
         case Pow:
-            // 实数幂运算不封闭
-            *lp = powf(*lp, *rp);
+            l->v.f = powf(l->v.f, r->v.f);
             break;
-        default:
-            free(l);
-            free(r);
-            recu_free_ast(res);
-            return NULL;
+        default: goto error;
         }
-
         free(r);
         res->token = l;
         return res;
     }
     else if (l->type == Int && r->type == Int)
     {
-        int *p = &l->v.i;
         switch (op)
         {
         case Add:
-            *p = l->v.i + r->v.i;
-            break;
+            l->v.i += r->v.i;
+            free(r);
+            res->token = l;
+            return res;
         case Sub:
-            *p = l->v.i - r->v.i;
-            break;
+            l->v.i -= r->v.i;
+            free(r);
+            res->token = l;
+            return res;
         case Mul:
-            *p = l->v.i * r->v.i;
-            break;
-        case Div:
-            // 整数除法不封闭
-            // error x/0
-            ret = alloc_node(divii(l, r), NULL, NULL);
-            free(l);
+            l->v.i *= r->v.i;
             free(r);
-            recu_free_ast(res);
+            res->token = l;
+            return res;
+        case Div: {
+            // 整数除法可能需要转换为Float
+            AST_Node *ret = alloc_node(divii(l, r), NULL, NULL);
+            free(l); free(r); recu_free_ast(res);
             return ret;
+        }
         case Mod:
-            // error x%0
-            if (r->v.i == 0)
-            {
-                free(l);
-                free(r);
-                recu_free_ast(res);
-                return NULL;
-            }
-            *p = l->v.i % r->v.i;
-            break;
-        case Pow:
-            // 整数非负指数幂运算封闭
-            // 整数负指数幂运算不封闭
-            // error 0^0 0^(-x) (x<0 in Z)
-            ret = alloc_node(powii(l, r), NULL, NULL);
-            free(l);
+            if (r->v.i == 0) goto error; // x%0 error
+            l->v.i %= r->v.i;
             free(r);
-            recu_free_ast(res);
+            res->token = l;
+            return res;
+        case Pow: {
+            // 幂运算可能需要转换为Float
+            AST_Node *ret = alloc_node(powii(l, r), NULL, NULL);
+            free(l); free(r); recu_free_ast(res);
             return ret;
-        default:
-            free(l);
-            free(r);
-            recu_free_ast(res);
-            return NULL;
+        }
+        default: goto error;
+        }
+    }
+
+error:
+    free(l);
+    free(r);
+    recu_free_ast(res);
+    return NULL;
+}
+
+// 返回持有所有权的AST_Node*
+// return NULL when error
+AST_Node *op_polymorphism(const AST_Node *const base_l, const AST_Node *const base_r, const TokenType op)
+{
+    assert(base_l != NULL && base_r != NULL);
+
+    // 创建结果节点
+    AST_Node *res = malloc(sizeof(AST_Node));
+    res->left = res->right = NULL;
+    res->token = NULL;
+
+    // 复制token(获得所有权)
+    Token *l = dump_token(base_l->token);
+    Token *r = dump_token(base_r->token);
+
+    // 类型统一
+    if (l->type == Float && r->type == Int)
+    {
+        r = transform_token_and_free(cast_int2float, r);
+    }
+    else if (l->type == Int && r->type == Float)
+    {
+        l = transform_token_and_free(cast_int2float, l);
+    }
+
+    return calculate_binary_op(l, r, op, res);
+}
+
+// 前向声明
+int simple_pow(const int x, const int y);
+
+// 二分查找根的数据结构
+typedef struct {
+    const AST_Node *node;
+    float xl, xr;
+    float l, r;
+    float tol;
+    int max_iter;
+    int expand_iter;
+    bool solution_found;
+} DichotomyState;
+
+// 初始化二分查找状态
+static void init_dichotomy_state(DichotomyState *state, const AST_Node *node,
+                                 float left_x, float right_x, float tol, int max_iter)
+{
+    state->node = node;
+    state->xl = left_x;
+    state->xr = right_x;
+    state->tol = tol;
+    state->max_iter = max_iter;
+    state->expand_iter = (max_iter == 1000) ? 4 : 8; // 根据迭代次数选择扩展范围
+    state->solution_found = false;
+
+    // 计算端点值
+    state->l = get_delta(node, state->xl);
+    state->r = get_delta(node, state->xr);
+}
+
+// 扩展搜索区间直到找到根或确定无解
+static bool expand_search_interval(DichotomyState *state)
+{
+    if (state->l * state->r <= 0)
+        return true; // 已经找到不同号的区间
+
+    for (int i = 1; i < state->expand_iter; i++)
+    {
+        float step = (state->xr - state->xl) / simple_pow(2, i);
+        for (int j = 0; j < simple_pow(2, i); j += 2)
+        {
+            state->xr = state->xl + (step + step * j);
+            state->r = get_delta(state->node, state->xr);
+            if (state->l * state->r <= 0)
+                return true;
+        }
+    }
+    return false;
+}
+
+// 执行二分查找,返回收敛的x值或NAN
+static float perform_dichotomy(DichotomyState *state)
+{
+    // 检查端点是否已经是根
+    if (state->l == 0.f)
+        return state->xl;
+    if (state->r == 0.f)
+        return state->xr;
+
+    // 如果无法找到不同号的区间,返回NAN
+    if (!expand_search_interval(state))
+        return NAN;
+
+    float xm = NAN;
+    float prev_xm;
+
+    for (int i = 0; i < state->max_iter; i++)
+    {
+        state->l = get_delta(state->node, state->xl);
+        prev_xm = xm;
+        xm = (state->xl + state->xr) / 2.f;
+
+        // 检查是否收敛或达到浮点精度极限
+        if (xm == prev_xm || state->xr - state->xl <= state->tol)
+        {
+            state->solution_found = true;
+            return xm;
         }
 
-        free(r);
-        res->token = l;
-        return res;
+        float m = get_delta(state->node, xm);
+
+        // 找到一个根
+        if (m == 0.f)
+        {
+            state->solution_found = true;
+            return xm;
+        }
+
+        // 缩小区间
+        if (state->l * m < 0)
+            state->xr = xm;
+        else
+            state->xl = xm;
     }
-    else
+
+    // 检查最后一次迭代是否达到误差容忍度
+    if (state->xr - state->xl <= state->tol)
     {
-        return NULL;
+        state->solution_found = true;
+        return xm;
     }
+
+    return NAN;
 }
 
 // 返回拥有所有权的AST_Node*
@@ -449,8 +529,8 @@ AST_Node *recu_calc(const AST_Node *const node)
     if (node->token->type == Func)
     {
         AST_Node *cp = deep_copy_node(node);
-        cp->left = transfrom_ast_and_free(recu_calc, cp->left);
-        return transfrom_ast_and_free(func_call, cp);
+        cp->left = transform_ast_and_free(recu_calc, cp->left);
+        return transform_ast_and_free(func_call, cp);
     }
     if (node->token->type == Var)
     {
@@ -507,8 +587,8 @@ float get_delta(const AST_Node *const node, float x)
     Token *tl, *tr;
     tl = calc(node->left);
     tr = calc(node->right);
-    tl = transfrom_token_and_free(cast_int2float, tl);
-    tr = transfrom_token_and_free(cast_int2float, tr);
+    tl = transform_token_and_free(cast_int2float, tl);
+    tr = transform_token_and_free(cast_int2float, tr);
     float l, r;
     l = tl->v.f;
     r = tr->v.f;
@@ -520,10 +600,9 @@ float get_delta(const AST_Node *const node, float x)
 float calc_x_expr(const AST_Node *const node, float x)
 {
     assign_real_var("x", x);
-    // float *f;
     Token *t;
     t = calc(node);
-    t = transfrom_token_and_free(cast_int2float, t);
+    t = transform_token_and_free(cast_int2float, t);
     return t->v.f;
 }
 
@@ -626,67 +705,17 @@ AST_Node *solve_dichotomy(const AST_Node *const node, const Token *const left_x,
     assert(node != NULL && node->token->type == Eq);
     assert(left_x != NULL && left_x->type == Float);
     assert(right_x != NULL && right_x->type == Float);
-    float xl, xr, xm;
-    float step, l, r, m;
-    int i, j;
-    bool break_out = false;
-    xl = left_x->v.f;
-    xr = right_x->v.f;
-    l = get_delta(node, xl);
-    r = get_delta(node, xr);
-    if (l * r > 0)
-        for (i = 1; i < 8; i++)
-        {
-            step = (xr - xl) / simple_pow(2, i);
-            for (j = 0; j < simple_pow(2, i); j += 2)
-            {
-                xr = xl + (step + step * j);
-                r = get_delta(node, xr);
-                if (l * r <= 0)
-                {
-                    break_out = true;
-                    break;
-                }
-            }
-            if (break_out)
-                break;
-        }
-    if (l == 0.)
-        return ast_x_eq_float(xl);
-    else if (r == 0.)
-    {
-        return ast_x_eq_float(xr);
-    }
-    if (l * r > 0)
-    {
-        // solution not found
+
+    // 使用辅助函数进行二分查找
+    DichotomyState state;
+    init_dichotomy_state(&state, node, left_x->v.f, right_x->v.f, EPSILON, 100000);
+
+    float solution = perform_dichotomy(&state);
+
+    if (!state.solution_found)
         return NULL;
-    }
-    for (i = 0; i < 100000; i++)
-    {
-        l = get_delta(node, xl);
-        r = get_delta(node, xr);
-        xm = (xl + xr) / 2.;
-        m = get_delta(node, xm);
-        if (xr - xl <= __FLT_MIN__ * 10 || m == 0.)
-            return ast_x_eq_float(xm);
-        if (l * m < 0)
-        {
-            xr = xm;
-        }
-        else
-        {
-            xl = xm;
-        }
-    }
-    if (xr - xl <= EPSILON)
-    {
-        return ast_x_eq_float(xm);
-    }
-    else
-    {
-        return NULL;
-    }
+
+    return ast_x_eq_float(solution);
 }
 
 OptionFloat some_float(float value)
@@ -708,76 +737,15 @@ OptionFloat none_float()
 OptionFloat solve_dichotomy_float(const AST_Node *const node, float left_x, float right_x)
 {
     assert(node != NULL && node->token->type == Eq);
-    float xl, xr, xm;
-    float step, l, r, m;
-    int i, j;
-    bool break_out = false;
-    xl = left_x;
-    xr = right_x;
-    l = get_delta(node, xl);
-    r = get_delta(node, xr);
-    if (l * r > 0)
-        for (i = 1; i < 4; i++)
-        {
-            step = (xr - xl) / simple_pow(2, i);
-            for (j = 0; j < simple_pow(2, i); j += 2)
-            {
-                xr = xl + (step + step * j);
-                r = get_delta(node, xr);
-                if (l * r <= 0)
-                {
-                    break_out = true;
-                    break;
-                }
-            }
-            if (break_out)
-                break;
-        }
-    if (l == 0.)
-        return some_float(xl);
-    else if (r == 0.)
-    {
-        return some_float(xr);
-    }
-    if (l * r > 0)
-    {
-        // solution not found
+
+    // 使用辅助函数进行二分查找
+    DichotomyState state;
+    init_dichotomy_state(&state, node, left_x, right_x, EPSILON, 1000);
+
+    float solution = perform_dichotomy(&state);
+
+    if (!state.solution_found)
         return none_float();
-    }
-    xm = NAN;
-    float prev_xm;
-    for (i = 0; i < 1000; i++)
-    {
-        prev_xm = xm;
-        xm = (xl + xr) / 2.;
-        if (xm == prev_xm)
-        {
-            return some_float(xm);
-        }
-        if (xr - xl <= FLT_MIN * i)
-            return some_float(xm);
-        l = get_delta(node, xl);
-        // r = get_delta(node, xr);
-        m = get_delta(node, xm);
-        if (m == 0.)
-        {
-            return some_float(xm);
-        }
-        if (l * m < 0)
-        {
-            xr = xm;
-        }
-        else
-        {
-            xl = xm;
-        }
-    }
-    if (xr - xl <= EPSILON)
-    {
-        return some_float(xm);
-    }
-    else
-    {
-        return none_float();
-    }
+
+    return some_float(solution);
 }

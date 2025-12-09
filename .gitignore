@@ -8,3 +8,5 @@ software/math_core/obj/*
 **/*.pdf
 software/math_core/test_tokens
 software/math_core/test_ast
+*.o
+software/math_core/debug/main
