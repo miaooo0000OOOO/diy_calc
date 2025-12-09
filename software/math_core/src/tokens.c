@@ -1,5 +1,30 @@
 #include "tokens.h"
 
+// Token parser state structure to encapsulate all parsing state
+typedef struct TokenParser {
+    const char *input;
+    usize input_len;
+    Token *tokens;
+    int tokens_cap;
+    int tokens_len;
+    int token_index;
+    char prev_char;
+    int parenthesis_layer;
+} TokenParser;
+
+// Initialize parser state
+static void init_parser(TokenParser *parser, const char *input, Token *tokens, int tokens_cap) {
+    parser->input = input;
+    parser->input_len = strlen(input);
+    parser->tokens = tokens;
+    parser->tokens_cap = tokens_cap;
+    parser->tokens_len = 0;
+    parser->token_index = 0;
+    parser->prev_char = '\0';
+    parser->parenthesis_layer = 0;
+}
+
+// Character type classification functions
 bool char_in_num(const char c)
 {
     return '0' <= c && c <= '9';
@@ -48,6 +73,243 @@ Token *new_token_from_int(int x)
     return res;
 }
 
+// ==================== Number Parsing Logic ====================
+
+// 判断字符串是何种数字类型
+// 0 Err 1 十六进制整数 2 十进制整数 3 八进制整数 4 二进制整数 5 浮点数
+static char classify_number_string(const char str[])
+{
+    const usize len = strlen(str);
+    if (len <= 0)
+    {
+        return 0; // Err
+    }
+    if (str[0] == '0') // 0开头的16进制或8进制数或2进制数
+    {
+        if (len <= 1)
+        {
+            return 2; // 十进制数字0
+        }
+        switch (str[1])
+        {
+        case '.':
+            return 5; // 浮点数
+        case 'b':
+        case 'B':
+            return 4; // 二进制整数
+        case 'x':
+        case 'X':
+            return 1; // 十六进制整数
+        default:
+            return 3; // 八进制整数
+        }
+    }
+    usize i;
+    for (i = 1; i < len; i++)
+    {
+        if (!char_in_num(str[i]))
+        {
+            if (str[i] == '.')
+            {
+                return 5; // 浮点数
+            }
+            else
+            {
+                return 2; // 十进制整数
+            }
+        }
+    }
+    return 2; // 十进制整数
+}
+
+// 解析二进制字符串
+static unsigned long parse_binary_number(const char *str, const usize len)
+{
+    assert(len > 2);
+    assert(str[0] == '0' && (str[1] == 'b' || str[1] == 'B'));
+    unsigned long n = 0;
+    for (usize i = 2; i < len; i++)
+    {
+        if (str[i] != '0' && str[i] != '1')
+            break;
+        n = (n << 1) | (str[i] - '0');
+    }
+    return n;
+}
+
+// 验证数字字符串的有效性并计算结束位置
+static usize validate_and_advance_number(const char *str, usize start, usize len, char num_type)
+{
+    usize i = start;
+
+    // Skip prefix
+    switch (num_type)
+    {
+    case 1: // 十六进制
+        i += 2;
+        break;
+    case 3: // 八进制
+        i++;
+        break;
+    case 4: // 二进制
+        i += 2;
+        break;
+    default:
+        break;
+    }
+
+    // Validate remaining characters
+    for (; i < len; i++)
+    {
+        char c = str[i];
+
+        if (num_type == 1 && c == '.') // 十六进制
+        {
+            return 0; // Error: hex with decimal point
+        }
+        else if (num_type == 2 && char_in_a2f(c)) // 十进制
+        {
+            return 0; // Error: decimal with hex chars
+        }
+        else if (num_type == 3 && (c == '8' || c == '9' || char_in_a2f(c))) // 八进制
+        {
+            return 0; // Error: octal with decimal/hex chars
+        }
+        else if (num_type == 4 && (char_in_hex(c) && !(c == '0' || c == '1'))) // 二进制
+        {
+            return 0; // Error: binary with non-binary chars
+        }
+
+        // If not a valid number character, stop
+        if (!(c == '.' || char_in_hex(c) || c == 'x' || c == 'X'))
+        {
+            break;
+        }
+    }
+
+    return i;
+}
+
+// 解析数字并创建token
+static bool parse_number(TokenParser *parser, usize *pos, Token *token)
+{
+    char num_type = classify_number_string(&parser->input[*pos]);
+    if (num_type == 0)
+    {
+        return false; // Error
+    }
+
+    usize end_pos = validate_and_advance_number(parser->input, *pos, parser->input_len, num_type);
+    if (end_pos == 0)
+    {
+        return false; // Validation failed
+    }
+
+    switch (num_type)
+    {
+    case 4: // 二进制整数
+        token->type = Int;
+        token->v.i = parse_binary_number(&parser->input[*pos], parser->input_len - *pos);
+        break;
+    case 5: // 浮点数
+        token->type = Float;
+        token->v.f = strtof(&parser->input[*pos], NULL);
+        break;
+    default: // 其他整数
+        token->type = Int;
+        token->v.i = strtoul(&parser->input[*pos], NULL, 0);
+        break;
+    }
+
+    *pos = end_pos - 1;
+    return true;
+}
+
+// ==================== Identifier Parsing Logic ====================
+
+// 解析标识符（变量或函数）并创建token
+static bool parse_identifier(TokenParser *parser, usize *pos, Token *token)
+{
+    const usize MAX_NAME_LEN = 15;
+    char *name = malloc(sizeof(char) * (MAX_NAME_LEN + 1));
+
+    usize k;
+    for (k = *pos; k < parser->input_len + 1; k++)
+    {
+        if (!char_in_alphabet_and_underline(parser->input[k]))
+        {
+            name[k - *pos] = '\0';
+
+            if (parser->input[k] == '(') // 函数
+            {
+                token->type = Func;
+            }
+            else // 变量
+            {
+                token->type = Var;
+                symbol_table[symbol_table_len].type = Real;
+                symbol_table[symbol_table_len].name = (char *)name;
+                symbol_table[symbol_table_len].data = NULL;
+                symbol_table_len++;
+            }
+
+            token->v.p = name;
+            break;
+        }
+        else
+        {
+            if (k - *pos >= MAX_NAME_LEN)
+            {
+                free(name);
+                return false; // Name too long
+            }
+            name[k - *pos] = parser->input[k];
+        }
+    }
+
+    *pos = k - 1;
+    return true;
+}
+
+// ==================== Operator Parsing Logic ====================
+
+// 解析减号（可能是减号或负号）
+static void parse_minus_operator(TokenParser *parser, usize pos, Token *token)
+{
+    char prev_c = parser->prev_char;
+    if (char_in_num(prev_c) || prev_c == ')' || char_in_alphabet(prev_c)) // 是减号的情况
+    {
+        token->type = Sub;
+    }
+    else // 是负号的情况
+    {
+        token->type = Neg;
+    }
+    token->v.i = 0;
+}
+
+// 解析左括号
+static bool parse_left_parenthesis(TokenParser *parser, Token *token)
+{
+    token->type = LeftParenthesis;
+    token->v.i = parser->parenthesis_layer;
+    parser->parenthesis_layer++;
+    return true;
+}
+
+// 解析右括号
+static bool parse_right_parenthesis(TokenParser *parser, Token *token)
+{
+    if (parser->parenthesis_layer == 0)
+    {
+        return false; // Unmatched parenthesis
+    }
+    parser->parenthesis_layer--;
+    token->type = RightParenthesis;
+    token->v.i = parser->parenthesis_layer;
+    return true;
+}
+
 // 返回Token的不可变引用
 // return NULL when out of index
 const Token *const peek_token()
@@ -86,15 +348,12 @@ void copy_token(const Token *const from, Token *const to)
     to->v = from->v;
 }
 
-Token token_list[1024] = {0};
-int tokens_len = 0;
-int gtoken_ind = 0;
+// ==================== Syntax Validation ====================
 
-// private
 // adja_char_stynax[i][j] 是否合法
 // 字符映射i，上一个字符映射j
 // 合法 0 非法 1
-const char adja_char_stynax[8][8] = {
+static const char adja_char_stynax[8][8] = {
     // 数字 +*/^% - ( ) = 字母 空
     {0, 0, 0, 0, 1, 0, 0, 0}, // 数字
     {0, 1, 1, 0, 0, 1, 0, 1}, //+*/^%
@@ -106,8 +365,7 @@ const char adja_char_stynax[8][8] = {
     {0, 1, 1, 1, 0, 1, 0, 0}  // 空
 };
 
-// private
-int adja_char_map(const char c)
+static int adja_char_map(const char c)
 {
     if (char_in_num(c))
     {
@@ -145,76 +403,14 @@ int adja_char_map(const char c)
 }
 
 // private
-bool check_adja_char_stynax(const char c, const char prev_c)
+static bool check_adja_char_stynax(const char c, const char prev_c)
 {
     return adja_char_stynax[adja_char_map(c)][adja_char_map(prev_c)] == 0;
 }
 
-// private
-// 0 Err 1 十六进制整数 2 十进制整数 3 八进制整数 4 二进制整数 5 浮点数
-char str_is_int_or_float(const char str[])
-{
-    const usize len = strlen(str);
-    if (len <= 0)
-    {
-        return 0; // Err
-    }
-    if (str[0] == '0') // 0开头的16进制或8进制数或2进制数
-    {
-        if (len <= 1)
-        {
-            return 2; // 十进制数字0
-        }
-        switch (str[1])
-        {
-        case '.':
-            return 5; // 浮点数
-        case 'b':
-            return 4; // 二进制整数
-        case 'B':
-            return 4;
-        case 'x':
-            return 1; // 十六进制整数
-        case 'X':
-            return 1;
-        default:
-            return 3; // 八进制整数
-        }
-    }
-    usize i;
-    for (i = 1; i < len; i++)
-    {
-        if (!char_in_num(str[i]))
-        {
-            if (str[i] == '.')
-            {
-                return 5; // 浮点数
-            }
-            else
-            {
-                return 2; // 十进制整数
-            }
-        }
-    }
-    return 2; // 十进制整数
-}
-
-// private
-unsigned long strbintol(const char str[], const usize len)
-{
-    assert(len > 2);
-    assert(str[0] == '0' && (str[1] == 'b' || str[1] == 'B'));
-    unsigned long n = 0;
-    for (usize i = 2; i < len; i++)
-    {
-        if (str[i] != '0' && str[i] != '1')
-            break;
-        n *= 2;
-        if (str[i] == '1')
-            n += 1;
-    }
-    return n;
-}
+Token token_list[1024] = {0};
+int tokens_len = 0;
+int gtoken_ind = 0;
 
 // return -1 when error
 // return len(tokens)
@@ -225,200 +421,124 @@ int parse_to_token_list(const char str[])
     {
         return -1;
     }
-    usize i;
-    usize j;
-    char c = '\0';
-    char prev_c = '\0';
-    int parenthesis_layer = 0;
-    for (i = j = 0; i < len; i++, j++)
+
+    // Initialize parser state
+    TokenParser parser;
+    init_parser(&parser, str, token_list, 1024);
+
+    // Main parsing loop
+    for (usize i = 0, j = 0; i < len; i++, j++)
     {
-        c = str[i];
+        char c = str[i];
+
+        // Skip whitespace
         if (c == ' ' || c == '\n' || c == '\r')
         {
             j--;
             continue;
         }
-        if (!check_adja_char_stynax(c, prev_c))
+
+        // Check syntax validity
+        if (!check_adja_char_stynax(c, parser.prev_char))
         {
-            // 语法错误
-            return -1;
+            return -1; // Syntax error
         }
+
+        Token *current_token = &token_list[j];
+
+        // Parse based on character type
         switch (c)
         {
         case '+':
-            token_list[j].type = Add;
-            token_list[j].v.i = 0;
+            current_token->type = Add;
+            current_token->v.i = 0;
             break;
+
         case '-':
-            if (char_in_num(prev_c) || prev_c == ')' || char_in_alphabet(prev_c)) // 是减号的情况
-            {
-                token_list[j].type = Sub;
-                token_list[j].v.i = 0;
-            }
-            else // 是负号的情况
-            {
-                token_list[j].type = Neg;
-                token_list[j].v.i = 0;
-            }
+            parse_minus_operator(&parser, i, current_token);
             break;
 
         case '*':
-            token_list[j].type = Mul;
-            token_list[j].v.i = 0;
+            current_token->type = Mul;
+            current_token->v.i = 0;
             break;
+
         case '/':
-            token_list[j].type = Div;
-            token_list[j].v.i = 0;
+            current_token->type = Div;
+            current_token->v.i = 0;
             break;
+
         case '^':
-            token_list[j].type = Pow;
-            token_list[j].v.i = 0;
+            current_token->type = Pow;
+            current_token->v.i = 0;
             break;
+
         case '%':
-            token_list[j].type = Mod;
-            token_list[j].v.i = 0;
+            current_token->type = Mod;
+            current_token->v.i = 0;
             break;
+
         case '(':
-            token_list[j].type = LeftParenthesis;
-            token_list[j].v.i = parenthesis_layer;
-            parenthesis_layer++;
+            if (!parse_left_parenthesis(&parser, current_token))
+            {
+                return -1;
+            }
             break;
+
         case ')':
-            if (parenthesis_layer == 0)
+            if (!parse_right_parenthesis(&parser, current_token))
             {
-                // 括号不匹配
                 return -1;
             }
-            parenthesis_layer--;
-            token_list[j].type = RightParenthesis;
-            token_list[j].v.i = parenthesis_layer;
             break;
+
         case '=':
-            if (parenthesis_layer != 0)
+            if (parser.parenthesis_layer != 0)
             {
-                return -1;
-                // 括号不匹配
+                return -1; // Parenthesis mismatch
             }
-            token_list[j].type = Eq;
-            token_list[j].v.i = 0;
+            current_token->type = Eq;
+            current_token->v.i = 0;
             break;
+
         default:
             if (char_in_num(c))
             {
-                // 数字
-                int num_type = str_is_int_or_float(&str[i]);
-                switch (num_type)
+                if (!parse_number(&parser, &i, current_token))
                 {
-                case 0: // Err
-                    return -1;
-                    break;
-                case 4:
-                    token_list[j].type = Int;
-                    token_list[j].v.i = strbintol(&str[i], len - i);
-                    break;
-                case 5: // 浮点数
-                    token_list[j].type = Float;
-                    token_list[j].v.f = strtof(&str[i], NULL);
-                    break;
-                default:
-                    token_list[j].type = Int;
-                    token_list[j].v.i = strtoul(&str[i], NULL, 0);
+                    return -1; // Number parsing error
                 }
-                switch (num_type)
-                {
-                case 1:
-                    i += 2;
-                    break;
-                case 3:
-                    i++;
-                    break;
-                case 4:
-                    i += 2;
-                    break;
-                }
-                for (; i < len; i++)
-                {
-                    if (num_type == 1 && str[i] == '.') // 十六进制
-                    {
-                        return -1;
-                    }
-                    else if (num_type == 2 && char_in_a2f(str[i])) // 十进制
-                    {
-                        // 含有十六进制字符
-                        return -1;
-                    }
-                    else if (num_type == 3 && (str[i] == '8' || str[i] == '9' || char_in_a2f(str[i]))) // 八进制数
-                    {
-                        // 含有十、十六进制字符
-                        return -1;
-                    }
-                    else if (num_type == 4 && (char_in_hex(str[i]) && !(str[i] == '0' || str[i] == '1'))) // 二进制数
-                    {
-                        // 含有八、十、十六进制字符
-                        return -1;
-                    }
-
-                    if (!(str[i] == '.' || char_in_hex(str[i]) || str[i] == 'x' || str[i] == 'X'))
-                    {
-                        break;
-                    }
-                }
-                i--;
             }
             else if (char_in_alphabet(c))
             {
-                // 函数或变量
-
-                char *name = malloc(sizeof(char) * 16);
-                usize k;
-                for (k = i; k < len + 1; k++)
+                if (!parse_identifier(&parser, &i, current_token))
                 {
-                    if (!char_in_alphabet_and_underline(str[k]))
-                    {
-                        name[k - i] = '\0';
-                        if (str[k] == '(') // 函数
-                        {
-                            token_list[j].type = Func;
-                        }
-                        else
-                        {
-                            token_list[j].type = Var;
-                            symbol_table[symbol_table_len].type = Real;
-                            symbol_table[symbol_table_len].name = (char *)name;
-                            symbol_table[symbol_table_len].data = NULL;
-                            symbol_table_len++;
-                        }
-                        token_list[j].v.p = name;
-                        // printf("name:%s\n", name);
-                        break;
-                    }
-                    else
-                    {
-                        if (k - i >= 15)
-                        {
-                            // 变量名或函数名过长
-                            return -1;
-                        }
-                        name[k - i] = str[k];
-                    }
+                    return -1; // Identifier parsing error
                 }
-                i = k - 1;
             }
+            else
+            {
+                return -1; // Unknown character
+            }
+            break;
         }
-        prev_c = str[i];
+
+        parser.prev_char = str[i];
+        parser.token_index = j;
     }
-    if (!check_adja_char_stynax('\0', c))
+
+    // Final validation
+    if (!check_adja_char_stynax('\0', parser.prev_char))
     {
-        // 语法错误
-        return -1;
+        return -1; // Syntax error at end
     }
-    if (parenthesis_layer != 0)
+    if (parser.parenthesis_layer != 0)
     {
-        // 括号不匹配
-        return -1;
+        return -1; // Unmatched parentheses
     }
-    tokens_len = j;
-    return j;
+
+    tokens_len = parser.token_index + 1;
+    return tokens_len;
 }
 
 void print_terimal_token(const Token *const t, const bool newline)
