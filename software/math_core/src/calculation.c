@@ -362,7 +362,7 @@ AST_Node *func_call(const AST_Node *const fn_node)
     assert(fn_node->left->token->type == Int || fn_node->left->token->type == Float);
     const float *const fp = &fn_node->left->token->v.f;
     const int *const ip = &fn_node->left->token->v.i;
-    const char *fn_name = (char *)fn_node->token->v.p;
+    const char *fn_name = fn_node->token->v.name;
     const Token *const fn_inner = fn_node->left->token;
     assert(fn_inner->type == Int || fn_inner->type == Float);
     if (strcmp(fn_name, "sqrt") == 0)
@@ -385,17 +385,17 @@ AST_Node *func_call(const AST_Node *const fn_node)
     {
         return alloc_node(fx_float_token(fn_inner, cotf), NULL, NULL);
     }
-    else if (strcmp((char *)fn_node->token->v.p, "ln") == 0)
+    else if (strcmp(fn_node->token->v.name, "ln") == 0)
     {
         // e为底
         return alloc_node(fx_float_token(fn_inner, logf), NULL, NULL);
     }
-    else if (strcmp((char *)fn_node->token->v.p, "log") == 0)
+    else if (strcmp(fn_node->token->v.name, "log") == 0)
     {
         // 10为底
         return alloc_node(fx_float_token(fn_inner, log10f), NULL, NULL);
     }
-    else if (strcmp((char *)fn_node->token->v.p, "abs") == 0)
+    else if (strcmp(fn_node->token->v.name, "abs") == 0)
     {
         AST_Node *res = alloc_node(malloc(sizeof(Token)), NULL, NULL);
         if (fn_inner->type == Int)
@@ -426,7 +426,7 @@ Token *get_var_value(const char *name)
         {
             Token *res = malloc((sizeof(Token)));
             res->type = Float;
-            res->v.p = symbol_table[i].data;
+            res->v.f = *((float*)symbol_table[i].data);
             return res;
         }
     }
@@ -454,7 +454,7 @@ AST_Node *recu_calc(const AST_Node *const node)
     }
     if (node->token->type == Var)
     {
-        return alloc_node(get_var_value((char *)node->token->v.p), NULL, NULL);
+        return alloc_node(get_var_value(node->token->v.name), NULL, NULL);
     }
     if (node->token->type == Int || node->token->type == Float)
         // 基本情况
@@ -572,7 +572,8 @@ AST_Node *solve(const AST_Node *const node, const Token *const initial_x)
     eq->right = value_node;
     x_node->token = malloc(sizeof(Token));
     x_node->token->type = Var;
-    x_node->token->v.p = "x";
+    strncpy(x_node->token->v.name, "x", 15);
+    x_node->token->v.name[15] = '\0';
     x_node->left = x_node->right = NULL;
     value_node->token = malloc(sizeof(Token));
     value_node->token->type = Float;
@@ -610,7 +611,8 @@ AST_Node *ast_x_eq_float(float x)
     eq->right = value_node;
     x_node->token = malloc(sizeof(Token));
     x_node->token->type = Var;
-    x_node->token->v.p = "x";
+    strncpy(x_node->token->v.name, "x", 15);
+    x_node->token->v.name[15] = '\0';
     x_node->left = x_node->right = NULL;
     value_node->token = malloc(sizeof(Token));
     value_node->token->type = Float;

@@ -73,6 +73,16 @@ Token *new_token_from_int(int x)
     return res;
 }
 
+// 返回拥有所有权的Token* for identifier
+static Token *new_token_from_name(const char *name, TokenType type)
+{
+    Token *res = malloc(sizeof(Token));
+    res->type = type;
+    strncpy(res->v.name, name, 15);
+    res->v.name[15] = '\0';
+    return res;
+}
+
 // ==================== Number Parsing Logic ====================
 
 // 判断字符串是何种数字类型
@@ -231,14 +241,21 @@ static bool parse_number(TokenParser *parser, usize *pos, Token *token)
 static bool parse_identifier(TokenParser *parser, usize *pos, Token *token)
 {
     const usize MAX_NAME_LEN = 15;
-    char *name = malloc(sizeof(char) * (MAX_NAME_LEN + 1));
-
     usize k;
+
     for (k = *pos; k < parser->input_len + 1; k++)
     {
         if (!char_in_alphabet_and_underline(parser->input[k]))
         {
-            name[k - *pos] = '\0';
+            // Calculate identifier length
+            usize name_len = k - *pos;
+            if (name_len >= 16) // Too long
+            {
+                return false;
+            }
+
+            // Copy name to token
+            token->v.name[name_len] = '\0';
 
             if (parser->input[k] == '(') // 函数
             {
@@ -248,22 +265,22 @@ static bool parse_identifier(TokenParser *parser, usize *pos, Token *token)
             {
                 token->type = Var;
                 symbol_table[symbol_table_len].type = Real;
-                symbol_table[symbol_table_len].name = (char *)name;
+                // Copy name to symbol table
+                strncpy(symbol_table[symbol_table_len].name, token->v.name, 15);
                 symbol_table[symbol_table_len].data = NULL;
                 symbol_table_len++;
             }
 
-            token->v.p = name;
             break;
         }
         else
         {
-            if (k - *pos >= MAX_NAME_LEN)
+            size_t idx = k - *pos;
+            if (idx >= MAX_NAME_LEN)
             {
-                free(name);
                 return false; // Name too long
             }
-            name[k - *pos] = parser->input[k];
+            token->v.name[idx] = parser->input[k];
         }
     }
 
@@ -552,7 +569,7 @@ void print_terimal_token(const Token *const t, const bool newline)
         printf("Float(%f)", t->v.f);
         break;
     case Var:
-        printf("Var(%s)", (char *)t->v.p);
+        printf("Var(%s)", t->v.name);
     default:
         break;
     }
@@ -596,10 +613,10 @@ void print_token_list()
             printf("^");
             break;
         case Func:
-            printf("Func{name: %s}", (char *)token_list[i].v.p);
+            printf("Func{name: %s}", token_list[i].v.name);
             break;
         case Var:
-            printf("Var{name: %s}", (char *)token_list[i].v.p);
+            printf("Var{name: %s}", token_list[i].v.name);
             break;
         case LeftParenthesis:
             printf("( Layer: %d", token_list[i].v.i);

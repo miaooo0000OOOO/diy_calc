@@ -32,14 +32,14 @@ typedef union TokenValue
 {
     int i;
     float f;
-    void *p;
-} TokenValue; // size 4B
+    char name[16];  // 标识符名称（函数名或变量名）
+} TokenValue; // size 16B
 
 typedef struct Token
 {
     TokenType type;
     TokenValue v;
-} Token; // size 8B
+} Token; // size 20B
 
 extern Token token_list[1024];
 extern int tokens_len;
@@ -51,7 +51,7 @@ extern int gtoken_ind;
 // bool char_in_alphabet_and_underline(char c);
 // bool char_in_hex(char c);
 
-const Token *peek_token();
+const Token *const peek_token();
 Token *next_token();
 Token *dump_token(const Token *const t);
 void copy_token(const Token *const from, Token *const to);

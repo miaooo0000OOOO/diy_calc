@@ -13,7 +13,7 @@ typedef enum VarType
 typedef struct VarTableLine
 {
     VarType type;
-    char *name;
+    char name[16];  // 变量名直接存储在结构体中
     void *data;
 } VarTableLine;
 
