@@ -6,3 +6,4 @@ software/math_core/bin/*
 software/math_core/obj/*
 **/*.zip
 **/*.pdf
+software/math_core/test_tokens
